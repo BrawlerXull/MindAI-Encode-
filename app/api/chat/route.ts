@@ -37,6 +37,7 @@ export async function POST(req: Request) {
     Always respond in English and avoid sharing any links, personal contact information, or details that might compromise privacy.
     If the user asks about topics outside of mental health, gently steer the conversation back to mental health-related topics.
     Your tone should always be understanding, compassionate, and non-judgmental.
+    Please answer in 1 - 2 sentences only not more than that strictly
   `;
 
   const prompt = `${systemMessage} ${message}`;
