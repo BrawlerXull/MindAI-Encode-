@@ -14,7 +14,11 @@ export default function Chatbot() {
   ]);
 
   const [isListening, setIsListening] = useState(false);
-  const recognition = typeof window !== "undefined" && new ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)();
+  
+  let recognition: SpeechRecognition | null = null;
+  if (typeof window !== "undefined") {
+    recognition = new ((window as Window & typeof globalThis).SpeechRecognition || (window as Window & typeof globalThis).webkitSpeechRecognition)();
+  }
 
   if (recognition) {
     recognition.continuous = false;
@@ -29,7 +33,8 @@ export default function Chatbot() {
       setIsListening(false);
     };
 
-    recognition.onresult = (event:any) => {
+    // Fix type of `event` here
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setInput((prev) => `${prev} ${transcript}`);
     };
@@ -37,10 +42,15 @@ export default function Chatbot() {
 
   const handleMicClick = () => {
     if (isListening) {
-      recognition.stop();
+      recognition?.stop();
     } else {
-      recognition.start();
+      recognition?.start();
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    handleSend();
   };
 
   return (
@@ -75,7 +85,7 @@ export default function Chatbot() {
         </ScrollArea>
       </CardContent>
       <CardFooter>
-        <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex w-full space-x-2">
+        <form onSubmit={handleSubmit} className="flex w-full space-x-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
