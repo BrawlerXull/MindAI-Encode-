@@ -1,16 +1,47 @@
 'use client'
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import useChat from "@/hooks/useChat"
-
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Mic, MicOff } from "lucide-react"; 
+import useChat from "@/hooks/useChat";
 
 export default function Chatbot() {
   const { messages, input, setInput, loading, error, handleSend } = useChat([
-    { role: 'bot', content: 'Hello! I\'m your MindAI your mental health assistant. How can I help you today?' },
+    { role: 'bot', content: 'Hello! I\'m your MindAI, your mental health assistant. How can I help you today?' },
   ]);
+
+  const [isListening, setIsListening] = useState(false);
+  const recognition = typeof window !== "undefined" && new ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)();
+
+  if (recognition) {
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.onresult = (event:any) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => `${prev} ${transcript}`);
+    };
+  }
+
+  const handleMicClick = () => {
+    if (isListening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+    }
+  };
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -33,7 +64,6 @@ export default function Chatbot() {
               <div className="w-3 h-3 rounded-full animate-bounce bg-gray-600"></div>
               <div className="w-4 h-4 rounded-full animate-bounce bg-gray-600"></div>
             </div>
-          
           )}
           {error && (
             <div className="flex justify-start mb-4">
@@ -52,6 +82,14 @@ export default function Chatbot() {
             placeholder="Type your message here..."
           />
           <Button type="submit" disabled={loading}>Send</Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleMicClick}
+            className={`p-2 ${isListening ? "text-red-500" : ""}`}
+          >
+            {isListening ? <MicOff /> : <Mic />}
+          </Button>
         </form>
       </CardFooter>
     </Card>
